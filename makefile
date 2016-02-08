@@ -15,27 +15,18 @@ PLIBS=$(POBJECTS:.o=.dll)
 OBJECTS= $(COBJECTS) $(POBJECTS) 
 LIBS= $(PLIBS) $(SLIBS)
 
- 
-
-
 slib: lib $(PLIBS) $(SLIBS) 
  
 $(SLIBS): %.dll: %.o
 	$(CC) $(LDFLAGS) $(LIBFLAGS) $< -o $@
 
 $(PLIBS):%.dll: %.o
-	$(CC) -shared $< -o $@	
+	$(CC) $(LDFLAGS) $< -o $@	
  
-lib: $(PHEADERS) $(PRIMARY) $(HEADERS) $(SOURCES) $(OBJECTS)
+lib: $(PRIMARY) $(SOURCES) $(OBJECTS)
 	
 $(OBJECTS): %.o: %.c
 	$(CC) $(CFLAGS) $< -o $@	
 
-
-
-
-
-
-	
 clean:
 	rm -f  $(OBJECTS) $(LIBS)
