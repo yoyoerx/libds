@@ -68,14 +68,17 @@ ListElement* createElement(void* data, size_t size){
 }
 
 //delete() deletes an existing ListElement
+//toDelete : a pointer to the ListElement to delete
+//returns : a  status code as defined in linklist.h
+//			fails fatally if pointer toDelete is NULL
 int delete(ListElement* toDelete){
 	ec_free(toDelete->value);
 	ec_free(toDelete);
 	return LLSUCCESS;
 }
 
-
 //PUBLIC FUNCTIONS//////////////////////////////////////////////////////////////////
+
 //makeList() initalizes a LinkedList
 //size : the size of the elements which will go in the list
 //			this is user supplied and is assumed to be correct
@@ -132,7 +135,6 @@ int insertElement(LinkedList* l, void* data, int i){
 	newElement->nextElement = oldIthElement;
 	oldIthElement->prevElement = newElement;
 
-	//hacky looking; sets i-1 element's nextElement to the newElement
 	ListElement* beforeInsert = newElement->prevElement;
 	beforeInsert->nextElement = newElement;
 
@@ -148,15 +150,19 @@ int insertElement(LinkedList* l, void* data, int i){
 //			if i>number of elements, data is not changed and returns LLUNDERRUN
 int readElement(LinkedList* l, void* data, int i){
 	ListElement* toRead = iterate(l,i);
-	if(toRead==NULL) return LLUNDERRUN;
+	if(toRead==NULL) return LLOVERRUN;
 
 	bcopy(toRead->value, data, l->elementSize);
 	return LLSUCCESS;
 }
 
 //deleteElement() removes the ith element of the list
+//l : a pointer to the LinkedList to delete the data from
+//i : the data will be deleted from the ith element of the list
+//returns : a  status code as defined in linklist.h
 int deleteElement(LinkedList* l, int i){
 	ListElement* toDelete = iterate(l,i);
+	if(toDelete==NULL) return LLOVERRUN;
 	ListElement* beforeDelete = toDelete->prevElement;
 	ListElement* afterDelete = toDelete->nextElement;
 
@@ -168,10 +174,13 @@ int deleteElement(LinkedList* l, int i){
 	return LLSUCCESS;
 }
 
+//deleteLastElement() removes the last element of the list
+//l : a pointer to the LinkedList to delete the data from
+//returns : a  status code as defined in linklist.h
 int deleteLastElement(LinkedList* l) {
-	ListElement* toDelete;
-	toDelete = l->end;
-	l->end = l->end->prevElement ;
+	ListElement* toDelete = l->end;
+	if(toDelete == NULL) return LLUNDERRUN;
+	l->end = l->end->prevElement;
 	l->end->nextElement = NULL;
 	
 	delete(toDelete);
@@ -179,11 +188,13 @@ int deleteLastElement(LinkedList* l) {
 	return LLSUCCESS;
 } 
 
-
+//deleteFirstElement() removes the first element of the list
+//l : a pointer to the LinkedList to delete the data from
+//returns : a  status code as defined in linklist.h
 int deleteFirstElement(LinkedList* l) {
-	ListElement* toDelete;
-	toDelete = l->begining;
-	l->begining = l->begining->nextElement ;
+	ListElement* toDelete = l->begining;
+	if(toDelete == NULL) return LLUNDERRUN;
+	l->begining = l->begining->nextElement;
 	l->begining->prevElement = NULL;
 	
 	delete(toDelete);
@@ -191,11 +202,21 @@ int deleteFirstElement(LinkedList* l) {
 	return LLSUCCESS;
 } 
 
+//isEmpty() determines if the list is empty or not
+//l : a pointer to the LinkedList to check
+//returns : LLSUCCESS if list still has elements
+//			or LLUNDERRUN if list is empty
 int isEmpty(LinkedList* l){
 	if(l->begining == NULL) return LLUNDERRUN;
 	else return LLSUCCESS;
 }
 
-
-int sortList(LinkedList* l);
-
+//sortList() puts the list in increasing order based on the > operator
+//			if the data is not suitable for sorting in this way,
+//			do not use this method if your data cannot be sorted this way
+//l : a pointer to the LinkedList to sort
+//returns : a  status code as defined in linklist.h
+//			not implimented yet.  always returns LLFAIL if called
+int sortList(LinkedList* l){
+	return LLFAIL;
+}
