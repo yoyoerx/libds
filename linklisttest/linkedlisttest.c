@@ -23,14 +23,16 @@ int main(){
 	//scanf("%d", &inputint);
 	//seed = inputint;
 	
+	intList = makeList(sizeof(int));
+
 	do{
 		m++;
 		i=0;
 		
 		//kill = PMrand() % 5000;
-		kill = 20;
+		kill = 3;
 		
-		intList = makeList(sizeof(int));
+		//intList = makeList(sizeof(int));
 		
 		printf("filling the list...\n");
 		
@@ -38,7 +40,8 @@ int main(){
 			i++;
 			
 			inputint = PMrand();
-			
+			printf("%d\n", inputint);
+
 			addElement(intList, &inputint);
 			
 			//pp();
@@ -49,18 +52,21 @@ int main(){
 		printf("emptying the list...\n");
 		
 		do{
-
-			deleteLastElement(intList);
+			readFirstElement(intList, &result);
+			printf("%d\n", result);
+			printf("%d\n", deleteFirstElement(intList));
+			printf("%d\n", isEmpty(intList));
 			//pp();
 		} while(isEmpty(intList)==LLSUCCESS);
 		
-		printf("breaking the list...\n");
 		
-		breakList(intList);
+		
+		//breakList(intList);
 		
 		//sleep(1);
 	} while(m<10);
-	
+	printf("breaking the list...\n");
+	breakList(intList);
 	printMemStats();
 	
 	

@@ -156,6 +156,22 @@ int readElement(LinkedList* l, void* data, int i){
 	return LLSUCCESS;
 }
 
+int readLastElement(LinkedList* l, void* data){
+	ListElement* toRead = l->end;
+	if(toRead==NULL) return LLOVERRUN;
+
+	bcopy(toRead->value, data, l->elementSize);
+	return LLSUCCESS;
+}
+
+int readFirstElement(LinkedList* l, void* data){
+	ListElement* toRead = l->begining;
+	if(toRead==NULL) return LLOVERRUN;
+
+	bcopy(toRead->value, data, l->elementSize);
+	return LLSUCCESS;
+}
+
 //deleteElement() removes the ith element of the list
 //l : a pointer to the LinkedList to delete the data from
 //i : the data will be deleted from the ith element of the list
@@ -181,7 +197,8 @@ int deleteLastElement(LinkedList* l) {
 	ListElement* toDelete = l->end;
 	if(toDelete == NULL) return LLUNDERRUN;
 	l->end = l->end->prevElement;
-	l->end->nextElement = NULL;
+	if(l->end!=NULL) l->end->nextElement = NULL;
+	if(l->end==NULL) l->begining = NULL;
 	
 	delete(toDelete);
 	
@@ -193,9 +210,10 @@ int deleteLastElement(LinkedList* l) {
 //returns : a  status code as defined in linklist.h
 int deleteFirstElement(LinkedList* l) {
 	ListElement* toDelete = l->begining;
-	if(toDelete == NULL) return LLUNDERRUN;
-	l->begining = l->begining->nextElement;
-	l->begining->prevElement = NULL;
+	//if(toDelete == NULL) return LLUNDERRUN;
+	l->begining = toDelete->nextElement;
+	if(l->begining!=NULL) l->begining->prevElement = NULL;
+	if(l->begining==NULL) l->end = NULL;
 	
 	delete(toDelete);
 	
