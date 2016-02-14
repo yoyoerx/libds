@@ -113,6 +113,7 @@ int addElement(LinkedList* l, void* data){
 
 	newElement->nextElement = NULL;
 	newElement->prevElement = l->end;
+	if(l->end!=NULL) l->end->nextElement = newElement;
 	l->end = newElement;
 	
 	if(l->begining == NULL){
