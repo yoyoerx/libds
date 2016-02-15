@@ -23,11 +23,11 @@ int breakList(LinkedList* l);
 int addElement(LinkedList* l, void* data);
 int insertElement(LinkedList* l, void* data, int i);
 
-int readElement(LinkedList* l, void* data, int i);
+int readElementI(LinkedList* l, void* data, int i);
 int readLastElement(LinkedList* l, void* data);
 int readFirstElement(LinkedList* l, void* data);
 
-int deleteElement(LinkedList* l, int i);
+int deleteElementI(LinkedList* l, int i);
 int deleteLastElement(LinkedList* l);
 int deleteFirstElement(LinkedList* l);
 

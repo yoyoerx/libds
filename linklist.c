@@ -5,7 +5,7 @@
 
 //ListElement is a struct (this is also a datatype for ease of use) contains
 //			implementations of this library should not touch ListElements
-// value : a pointer to alloccated memory of size LinkedList->elementSize
+// value : a pointer to allocated memory of size LinkedList->elementSize
 // prevElement : a pointer to the ListElement directly before IT in the linked list
 //                 and is NULL if THIS is the first element in the list
 // nextElement : a pointer to the ListElement directly after IT it the linked list
@@ -34,16 +34,17 @@ struct LinkedList {
 
 //iterate() provides the ith element of a LinkedList
 //l : a pointer to the LinkedList
-//i : an integer number of elements to traverse befor returning
+//i : an integer number of elements to traverse before returning
 //returns : a pointer to the ith ListElement
 //			if i==0, returns l->begining
 //			if i>number of elements, returns NULL
 ListElement* iterate(LinkedList* l, int i){
 	int n;
 	ListElement* holder = NULL;
-	holder = l->begining;
 	
-	for(n=0;n>=i; i++){
+	holder = l->begining;
+	for(n=1;n<=i; n++){
+		if(holder==NULL) return holder;
 		holder = holder->nextElement;
 	}
 	
@@ -67,11 +68,11 @@ ListElement* createElement(void* data, size_t size){
 	return newElement;
 }
 
-//delete() deletes an existing ListElement
+//deleteElement() deletes an existing ListElement
 //toDelete : a pointer to the ListElement to delete
 //returns : a  status code as defined in linklist.h
 //			fails fatally if pointer toDelete is NULL
-int delete(ListElement* toDelete){
+int deleteElement(ListElement* toDelete){
 	ec_free(toDelete->value);
 	ec_free(toDelete);
 	return LLSUCCESS;
@@ -149,7 +150,7 @@ int insertElement(LinkedList* l, void* data, int i){
 //i : the data will be read from the ith element of the list
 //returns : a  status code as defined in linklist.h
 //			if i>number of elements, data is not changed and returns LLUNDERRUN
-int readElement(LinkedList* l, void* data, int i){
+int readElementI(LinkedList* l, void* data, int i){
 	ListElement* toRead = iterate(l,i);
 	if(toRead==NULL) return LLOVERRUN;
 
@@ -167,26 +168,33 @@ int readLastElement(LinkedList* l, void* data){
 
 int readFirstElement(LinkedList* l, void* data){
 	ListElement* toRead = l->begining;
-	if(toRead==NULL) return LLOVERRUN;
+	if(toRead==NULL) return LLUNDERRUN;
 
 	bcopy(toRead->value, data, l->elementSize);
 	return LLSUCCESS;
 }
 
-//deleteElement() removes the ith element of the list
+//deleteElementI() removes the ith element of the list
 //l : a pointer to the LinkedList to delete the data from
 //i : the data will be deleted from the ith element of the list
 //returns : a  status code as defined in linklist.h
-int deleteElement(LinkedList* l, int i){
+int deleteElementI(LinkedList* l, int i){
 	ListElement* toDelete = iterate(l,i);
 	if(toDelete==NULL) return LLOVERRUN;
 	ListElement* beforeDelete = toDelete->prevElement;
 	ListElement* afterDelete = toDelete->nextElement;
 
-	beforeDelete->nextElement = afterDelete;
-	afterDelete->prevElement = beforeDelete;
+	if(beforeDelete!=NULL) {
+		beforeDelete->nextElement = afterDelete;
+	}
+	if(beforeDelete==NULL) l->begining = afterDelete;
+	
+	if(afterDelete!=NULL){
+		afterDelete->prevElement = beforeDelete;
+	}
+	if(afterDelete==NULL) l->end = beforeDelete;
 
-	delete(toDelete);
+	deleteElement(toDelete);
 
 	return LLSUCCESS;
 }
@@ -201,7 +209,7 @@ int deleteLastElement(LinkedList* l) {
 	if(l->end!=NULL) l->end->nextElement = NULL;
 	if(l->end==NULL) l->begining = NULL;
 	
-	delete(toDelete);
+	deleteElement(toDelete);
 	
 	return LLSUCCESS;
 } 
@@ -216,7 +224,7 @@ int deleteFirstElement(LinkedList* l) {
 	if(l->begining!=NULL) l->begining->prevElement = NULL;
 	if(l->begining==NULL) l->end = NULL;
 	
-	delete(toDelete);
+	deleteElement(toDelete);
 	
 	return LLSUCCESS;
 } 
@@ -235,7 +243,7 @@ int isEmpty(LinkedList* l){
 //			do not use this method if your data cannot be sorted this way
 //l : a pointer to the LinkedList to sort
 //returns : a  status code as defined in linklist.h
-//			not implimented yet.  always returns LLFAIL if called
+//			not implemented yet.  always returns LLFAIL if called
 int sortList(LinkedList* l){
 	return LLFAIL;
 }
