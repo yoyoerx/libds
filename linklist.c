@@ -211,7 +211,7 @@ int deleteLastElement(LinkedList* l) {
 //returns : a  status code as defined in linklist.h
 int deleteFirstElement(LinkedList* l) {
 	ListElement* toDelete = l->begining;
-	//if(toDelete == NULL) return LLUNDERRUN;
+	if(toDelete == NULL) return LLUNDERRUN;
 	l->begining = toDelete->nextElement;
 	if(l->begining!=NULL) l->begining->prevElement = NULL;
 	if(l->begining==NULL) l->end = NULL;
