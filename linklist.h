@@ -11,11 +11,7 @@
 //The linked list data structure
 typedef struct LinkedList LinkedList;
 
-//makeList() initalizes a LinkedList
-//size : the size of the elements which will go in the list
-//			this is user supplied and is assumed to be correct
-//returns : a pointer to a LinkedList with 0 elements
-//			fails fatally if it cannot allocate memory
+
 LinkedList* makeList(size_t size);
 
 int breakList(LinkedList* l);
@@ -35,5 +31,13 @@ int deleteFirstElement(LinkedList* l);
 int isEmpty(LinkedList* l);
 
 int sortList(LinkedList* l);
+
+//List Iterator Datatype
+typedef struct LLIterator LLIterator;
+LLIterator initLLIterator(LinkedList* l);
+int IterateForward(LLIterator* iterator, void* data);
+int IterateBackward(LLIterator* iterator, void* data);
+int IterateRead(LLIterator* iterator, void* data);
+int IterateDelete(LLIterator* iterator);
 
 #endif
