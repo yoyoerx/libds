@@ -1,9 +1,9 @@
 # libds
-datastructure library and utiliy functions
+datastructure library and utility functions
 
 Data structure libraries coded in C
 
-Current make set to deploy in cygwin
+Current /make/ set to deploy in cygwin
 
 Dynamically allocated datastructures capible of accepting any datatype.
 
