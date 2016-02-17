@@ -1,22 +1,25 @@
 CC=gcc
 CFLAGS=-c -Wall -g
 LDFLAGS=-Wall -g
-CSOURCES=linkedlisttest.c ../linklist.c ../utils.c
-CHEADERS==../linklist.h ../utils.h
+CSOURCES=linkedlisttest.c linkedlisttestiterators.c ../linklist.c ../utils.c
+CHEADERS=../linklist.h ../utils.h
 NLSOURCE=linkedlisttest.c
 NLHEARDERS=../linklist.h ../utils.h
 
 LIBFLAGS=-L.. -llinklist -lutils
 
 SOURCES=$(CSOURCES)
+LIBOBJECTS=../linklist.o ../utils.o
 COBJECTS=$(CSOURCES:.c=.o)
 OBJECTS= $(COBJECTS) 
-EXECUTABLE=linkedlisttest.exe
+EXECUTABLES=linkedlisttest.exe linkedlisttestiterators.exe
 
-all: $(SOURCES) $(EXECUTABLE)
+all: $(SOURCES) $(COBJECTS) $(EXECUTABLES) 
+
+
     
-$(EXECUTABLE): $(COBJECTS) 
-	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
+$(EXECUTABLES): %.exe: %.o 
+	$(CC) $(LDFLAGS) $(LIBOBJECTS) $< -o $@
 
 $(COBJECTS): %.o: %.c
 	$(CC) $(CFLAGS) $< -o $@

@@ -38,7 +38,7 @@ int main(){
 
 		printf(" %d ", inputint);
 
-		addElement(intList, &inputint);
+		addLastElement(intList, &inputint);
 		
 		pp();
 		i++;
@@ -84,19 +84,19 @@ int main(){
 
 	//test insert element at 5
 	result = 77;
-	insertElement(intList, &result, 5);
+	addElementI(intList, &result, 5);
 	readElementI(intList, &result, 5);
 	printf("\nInserted %d at i=5\n", result);
 
 	//test insert element at 0
 	result = 55;
-	insertElement(intList, &result, 0);
+	addElementI(intList, &result, 0);
 	readElementI(intList, &result, 0);
 	printf("\nInserted %d at i=0\n", result);
 
 	//test insert element out of bounds
 	result = 99;
-	insertElement(intList, &result, 11);
+	addElementI(intList, &result, 11);
 	readElementI(intList, &result, 11);
 	printf("\nInserted %d at i=11\n", result);
 
@@ -146,7 +146,7 @@ int main(){
  
 		printf(" %d ", inputint);
 
-		addElement(intList, &inputint);
+		addLastElement(intList, &inputint);
 		
 		pp();
 		i++;

@@ -11,33 +11,41 @@
 //The linked list data structure
 typedef struct LinkedList LinkedList;
 
-
 LinkedList* makeList(size_t size);
+int breakList(LinkedList* list);
 
-int breakList(LinkedList* l);
+int addElementI(LinkedList* list, const void* data, int i);
+int addLastElement(LinkedList* list, const void* data);
+int addFirstElement(LinkedList* list, const void* data);
 
-int addElement(LinkedList* l, void* data);
-int insertElement(LinkedList* l, void* data, int i);
+int readElementI(LinkedList* list, void* data, int i);
+int readLastElement(LinkedList* list, void* data);
+int readFirstElement(LinkedList* list, void* data);
 
-int readElementI(LinkedList* l, void* data, int i);
-int readLastElement(LinkedList* l, void* data);
-int readFirstElement(LinkedList* l, void* data);
+int deleteElementI(LinkedList* list, int i);
+int deleteLastElement(LinkedList* list);
+int deleteFirstElement(LinkedList* list);
 
-int deleteElementI(LinkedList* l, int i);
-int deleteLastElement(LinkedList* l);
-int deleteFirstElement(LinkedList* l);
-
-
-int isEmpty(LinkedList* l);
-
-int sortList(LinkedList* l);
+int isEmpty(LinkedList* list);
 
 //List Iterator Datatype
 typedef struct LLIterator LLIterator;
-LLIterator initLLIterator(LinkedList* l);
-int IterateForward(LLIterator* iterator, void* data);
-int IterateBackward(LLIterator* iterator, void* data);
+
+LLIterator* initLLIterator(LinkedList* list);
+int breakLLIterator(LLIterator* iterator);
+int IterateSetFront(LLIterator* iterator);
+int IterateSetBack(LLIterator* iterator);
+int IterateForward(LLIterator* iterator);
+int IterateBackward(LLIterator* iterator);
 int IterateRead(LLIterator* iterator, void* data);
 int IterateDelete(LLIterator* iterator);
+int IterateInsertBefore(LLIterator* iterator, const void* data);
+int IterateInsertAfter(LLIterator* iterator, const void* data);
+int IterateSwap(LLIterator* iteratorA, LLIterator* iteratorB);
+
+//Sort Implimentations
+int sortList(LinkedList* list);
+typedef int (*LinkedListComparator)(const void* element1, const void* element2);
+int sortListUserFunction(LinkedList* list, LinkedListComparator compare);
 
 #endif

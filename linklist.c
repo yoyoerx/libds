@@ -12,11 +12,13 @@
 //                 and is NULL if THIS is the first element in the list
 // nextElement : a pointer to the ListElement directly after IT it the linked list
 //                 and is NULL if THIS is the last element in the list 
-typedef struct ListElement {
+struct ListElement;
+typedef struct ListElement ListElement;
+struct ListElement {
 	void* value;
-	void* prevElement;
-	void* nextElement;
-} ListElement;
+	ListElement* prevElement;
+	ListElement* nextElement;
+};
 
 //LinkedList is a struct which contains the guts of the linked list.
 //			and is also defined as a datatype in linklist.h
@@ -36,16 +38,16 @@ struct LinkedList {
 //private helper functions *not to be forward facing*///////////////////////////////
 
 //iterate() provides the ith element of a LinkedList
-//l : a pointer to the LinkedList
+//list : a pointer to the LinkedList
 //i : an integer number of elements to traverse before returning
 //returns : a pointer to the ith ListElement
-//			if i<=0, returns l->begining
+//			if i<=0, returns list->begining
 //			if i>number of elements, returns NULL
-ListElement* iterate(LinkedList* l, int i){
+ListElement* iterate(LinkedList* list, int i){
 	int n;
 	ListElement* holder = NULL;
 	
-	holder = l->begining;
+	holder = list->begining;
 	for(n=1;n<=i; n++){
 		if(holder==NULL) return holder;
 		holder = holder->nextElement;
@@ -59,7 +61,7 @@ ListElement* iterate(LinkedList* l, int i){
 //			assumes that data is correctly sized based on size
 //returns : a new ListElement with NULL pointers to the previous and next elements
 //			fails fatally if memory cannot be allocated
-ListElement* createElement(void* data, size_t size){
+ListElement* createElement(const void* data, size_t size){
 	ListElement* newElement = ec_malloc(sizeof(ListElement));
 	
 	newElement->value = ec_malloc(size);
@@ -74,11 +76,11 @@ ListElement* createElement(void* data, size_t size){
 //readElement() reads a ListElement
 //e : ListElement to read
 //data : a pointer to memory allocated to accept the data from the list
-//			assumes that data is correctly sized based on l->elementSize
+//			assumes that data is correctly sized based on list->elementSize
 //size : the size of the data element to be read
 //returns : a  status code as defined in linklist.h
 //			if e==null, data is not changed and returns LLFAIL
-int readElement(ListElement* e, void* data, size_t size){
+int readElement(const ListElement* e, void* data, size_t size){
 	if(e==NULL) return LLFAIL;
 	bcopy(e->value, data, size);
 	return LLSUCCESS;
@@ -109,6 +111,17 @@ int deleteElement(ListElement* toDelete){
 	return LLSUCCESS;
 }
 
+int swapElements(ListElement* elementA, ListElement* elementB){
+	if(elementA==NULL||elementB==NULL) return LLFAIL;
+	ListElement* prevHolder = elementA->prevElement;
+	ListElement* nextHolder = elementA->nextElement;
+	elementA->prevElement = elementB->prevElement;
+	elementA->nextElement = elementB->nextElement;
+	elementB->prevElement = prevHolder;
+	elementB->nextElement = nextHolder;
+	return LLSUCCESS;
+}
+
 //PUBLIC FUNCTIONS//////////////////////////////////////////////////////////////////
 
 //makeList() initalizes a LinkedList
@@ -125,60 +138,41 @@ LinkedList* makeList(size_t size){
 }
 
 //breakList() deallocates all memory used in a LinkedList
-//l : a pointer to the LinkedList to be deallocated
+//list : a pointer to the LinkedList to be deallocated
 //returns : a status code as defined in linklist.h
-int breakList(LinkedList* l){
-	while(isEmpty(l)==LLSUCCESS){
-		deleteLastElement(l);
+int breakList(LinkedList* list){
+	while(isEmpty(list)==LLSUCCESS){
+		deleteLastElement(list);
 	}
-	ec_free(l);
+	ec_free(list);
 	return LLSUCCESS;
 }
 
-//addElement() adds data to the end of the list
-//l : a pointer to the LinkedList to add the data to
+//addElementI() adds data at an arbitraty location, i, in the list
+//list : a pointer to the LinkedList to add the data to
 //data : a pointer to the data to be added
-//			assumes that data is correctly sized based on l->elementSize
-//returns : a  status code as defined in linklist.h
-int addElement(LinkedList* l, void* data){
-	ListElement* newElement = createElement(data, l->elementSize);
-
-	newElement->nextElement = NULL;
-	newElement->prevElement = l->end;
-	if(l->end!=NULL) l->end->nextElement = newElement;
-	l->end = newElement;
-	
-	if(l->begining == NULL){
-		l->begining = l->end;
-	}
-	return LLSUCCESS;
-}
-
-//insertElement() adds data at an arbitraty location, i, in the list
-//l : a pointer to the LinkedList to add the data to
-//data : a pointer to the data to be added
-//			assumes that data is correctly sized based on l->elementSize
+//			assumes that data is correctly sized based on list->elementSize
 //i : the data added becomes the ith ListElement
 // 			if i>number of elements, returns LLOVERRUN
 //			if i<=0, element is inserted at the begining of the list
 //returns : a  status code as defined in linklist.h
-int insertElement(LinkedList* l, void* data, int i){
+int addElementI(LinkedList* list, const void* data, int i){
 	
-	ListElement* oldIthElement = iterate(l, i);
+	ListElement* oldIthElement = iterate(list, i);
 	if(oldIthElement==NULL) {
-		oldIthElement = iterate(l,i-1);
+		oldIthElement = iterate(list,i-1);
 		if(oldIthElement==NULL) return LLOVERRUN;
 		//case for inserting at end of list
-		return addElement(l, data);
+		return addLastElement(list, data);
 	}
 		
-	ListElement* newElement = createElement(data, l->elementSize);
+	ListElement* newElement = createElement(data, list->elementSize);
 
 	newElement->prevElement = oldIthElement->prevElement;
 	newElement->nextElement = oldIthElement;
 	oldIthElement->prevElement = newElement;
 
-	if(newElement->prevElement==NULL) l->begining = newElement;
+	if(newElement->prevElement==NULL) list->begining = newElement;
 	else{
 		ListElement* beforeInsert = newElement->prevElement;
 		beforeInsert->nextElement = newElement;
@@ -187,123 +181,157 @@ int insertElement(LinkedList* l, void* data, int i){
 	return LLSUCCESS;
 }
 
-//readElement() provides a copy of the data in ListElement i
-//l : a pointer to the LinkedList to read the data from
+//addLastElement() adds data to the end of the list
+//list : a pointer to the LinkedList to add the data to
+//data : a pointer to the data to be added
+//			assumes that data is correctly sized based on list->elementSize
+//returns : a  status code as defined in linklist.h
+int addLastElement(LinkedList* list, const void* data){
+	ListElement* newElement = createElement(data, list->elementSize);
+
+	newElement->nextElement = NULL;
+	newElement->prevElement = list->end;
+	if(list->end!=NULL) list->end->nextElement = newElement;
+	list->end = newElement;
+	
+	if(list->begining == NULL){
+		list->begining = list->end;
+	}
+	return LLSUCCESS;
+}
+
+//addFirstElement() adds data to the begining of the list
+//list : a pointer to the LinkedList to add the data to
+//data : a pointer to the data to be added
+//			assumes that data is correctly sized based on list->elementSize
+//returns : a  status code as defined in linklist.h
+int addFirstElement(LinkedList* list, const void* data){
+	ListElement* newElement = createElement(data, list->elementSize);
+
+	newElement->prevElement = NULL;
+	newElement->nextElement = list->begining;
+	if(list->begining!=NULL) list->begining->nextElement = newElement;
+	list->begining = newElement;
+	
+	if(list->end == NULL){
+		list->end= list->begining;
+	}
+	return LLSUCCESS;
+}
+
+//readElementI() provides a copy of the data in ListElement i
+//list : a pointer to the LinkedList to read the data from
 //data : a pointer to memory allocated to accept the data from the list
-//			assumes that data is correctly sized based on l->elementSize
+//			assumes that data is correctly sized based on list->elementSize
 //i : the data will be read from the ith element of the list
 //returns : a  status code as defined in linklist.h
 //			if i>number of elements, data is not changed and returns LLUNDERRUN
-int readElementI(LinkedList* l, void* data, int i){
-	ListElement* toRead = iterate(l,i);
-	if(readElement(toRead, data, l->elementSize)==LLFAIL) return LLOVERRUN;
+int readElementI(LinkedList* list, void* data, int i){
+	ListElement* toRead = iterate(list,i);
+	if(readElement(toRead, data, list->elementSize)==LLFAIL) return LLOVERRUN;
 	return LLSUCCESS;
 }
 
-int readLastElement(LinkedList* l, void* data){
-	ListElement* toRead = l->end;
-	if(readElement(toRead, data, l->elementSize)==LLFAIL) return LLOVERRUN;
+int readLastElement(LinkedList* list, void* data){
+	ListElement* toRead = list->end;
+	if(readElement(toRead, data, list->elementSize)==LLFAIL) return LLOVERRUN;
 	return LLSUCCESS;
 }
 
-int readFirstElement(LinkedList* l, void* data){
-	ListElement* toRead = l->begining;
-	if(readElement(toRead, data, l->elementSize)==LLFAIL) return LLUNDERRUN;
+int readFirstElement(LinkedList* list, void* data){
+	ListElement* toRead = list->begining;
+	if(readElement(toRead, data, list->elementSize)==LLFAIL) return LLUNDERRUN;
 	return LLSUCCESS;
 }
 
 //deleteElementI() removes the ith element of the list
-//l : a pointer to the LinkedList to delete the data from
+//list : a pointer to the LinkedList to delete the data from
 //i : the data will be deleted from the ith element of the list
 //returns : a  status code as defined in linklist.h
-int deleteElementI(LinkedList* l, int i){
-	ListElement* toDelete = iterate(l,i);
+int deleteElementI(LinkedList* list, int i){
+	ListElement* toDelete = iterate(list,i);
 	if(toDelete==NULL) return LLOVERRUN;
-	if(toDelete->prevElement==NULL) l->begining = toDelete->nextElement;
-	if(toDelete->nextElement==NULL) l->end = toDelete->prevElement;
+	if(toDelete->prevElement==NULL) list->begining = toDelete->nextElement;
+	if(toDelete->nextElement==NULL) list->end = toDelete->prevElement;
 
 	return deleteElement(toDelete);
 }
 
 //deleteLastElement() removes the last element of the list
-//l : a pointer to the LinkedList to delete the data from
+//list : a pointer to the LinkedList to delete the data from
 //returns : a  status code as defined in linklist.h
-int deleteLastElement(LinkedList* l) {
-	ListElement* toDelete = l->end;
+int deleteLastElement(LinkedList* list) {
+	ListElement* toDelete = list->end;
 	if(toDelete == NULL) return LLOVERRUN;
-	l->end = l->end->prevElement;
-	if(l->end!=NULL) l->end->nextElement = NULL;
-	if(l->end==NULL) l->begining = NULL;
+	list->end = list->end->prevElement;
+	if(list->end!=NULL) list->end->nextElement = NULL;
+	if(list->end==NULL) list->begining = NULL;
 	
 	return deleteElement(toDelete);;
 } 
 
 //deleteFirstElement() removes the first element of the list
-//l : a pointer to the LinkedList to delete the data from
+//list : a pointer to the LinkedList to delete the data from
 //returns : a  status code as defined in linklist.h
-int deleteFirstElement(LinkedList* l) {
-	ListElement* toDelete = l->begining;
+int deleteFirstElement(LinkedList* list) {
+	ListElement* toDelete = list->begining;
 	if(toDelete == NULL) return LLUNDERRUN;
-	l->begining = toDelete->nextElement;
-	if(l->begining!=NULL) l->begining->prevElement = NULL;
-	if(l->begining==NULL) l->end = NULL;
+	list->begining = toDelete->nextElement;
+	if(list->begining!=NULL) list->begining->prevElement = NULL;
+	if(list->begining==NULL) list->end = NULL;
 	
 	return deleteElement(toDelete);
 } 
 
 //isEmpty() determines if the list is empty or not
-//l : a pointer to the LinkedList to check
+//list : a pointer to the LinkedList to check
 //returns : LLSUCCESS if list still has elements
 //			or LLUNDERRUN if list is empty
-int isEmpty(LinkedList* l){
-	if(l->begining == NULL) return LLUNDERRUN;
+int isEmpty(LinkedList* list){
+	if(list->begining == NULL) return LLUNDERRUN;
 	else return LLSUCCESS;
 }
 
-//sortList() puts the list in increasing order based on the > operator
-//			if the data is not suitable for sorting in this way,
-//			do not use this method if your data cannot be sorted this way
-//l : a pointer to the LinkedList to sort
-//returns : a  status code as defined in linklist.h
-//			not implemented yet.  always returns LLFAIL if called
-int sortList(LinkedList* l){
-	return LLFAIL;
-}
-
-
-
-//we could speed up sequential reads by having an iterator datatype
-//which would be created by the user but used as a pointer to the
-//current location in the array, like a bookmark.  wrap it in a struct to prevent
-//tampering.
-//should it have an index? should the index be absolute or relative
-//how should it handle list deletes?
-//LLIterator initLLIterator(LinkedList* l);
-//int IterateForward(LLIterator* iterator, void* data);
-//int IterateBackward(LLIterator* iterator, void* data);
-//int IterateDelete(LLIterator* iterator);
-
+//Iterator system to speed up sequential reads
+//The iterator itself has a pointer to the LinkedList it serves.
 struct LLIterator {
 	ListElement* marker;
 	LinkedList* list;
 };
 
-LLIterator initLLIterator(LinkedList* l){
-	LLIterator newIterator;
-	newIterator.marker = l->begining;
-	newIterator.list = l;
+LLIterator* initLLIterator(LinkedList* list){
+	LLIterator* newIterator = ec_malloc(sizeof(LLIterator));;
+	newIterator->marker = list->begining;
+	newIterator->list = list;
 	return newIterator;
 }
 
-int IterateForward(LLIterator* iterator, void* data){
-	readElement(iterator->marker, data, iterator->list->elementSize);
+int breakLLIterator(LLIterator* iterator){
+	ec_free(iterator);
+	return LLSUCCESS;
+}
+
+int IterateSetFront(LLIterator* iterator){
+	iterator->marker = iterator->list->begining;
+	if(iterator->marker==NULL) return LLUNDERRUN;
+	return LLSUCCESS;
+}
+
+int IterateSetBack(LLIterator* iterator){
+	iterator->marker = iterator->list->end;
+	if(iterator->marker==NULL) return LLUNDERRUN;
+	return LLSUCCESS;
+}
+
+int IterateForward(LLIterator* iterator){
+	//readElement(iterator->marker, data, iterator->list->elementSize);
 	if(iterator->marker->nextElement==NULL) return LLOVERRUN;
 	else iterator->marker = iterator->marker->nextElement;
 	return LLSUCCESS;
 }
 
-int IterateBackward(LLIterator* iterator, void* data){
-	readElement(iterator->marker, data, iterator->list->elementSize);
+int IterateBackward(LLIterator* iterator){
+	//readElement(iterator->marker, data, iterator->list->elementSize);
 	if(iterator->marker->prevElement==NULL) return LLUNDERRUN;
 	else iterator->marker = iterator->marker->prevElement;
 	return LLSUCCESS;
@@ -317,6 +345,7 @@ int IterateDelete(LLIterator* iterator){
 	if(iterator==NULL) return LLFAIL;
 	if(iterator->marker==NULL) return LLFAIL;
 
+
 	ListElement* newNextElement= iterator->marker->nextElement;
 
 	if(iterator->marker==iterator->list->begining){
@@ -327,8 +356,35 @@ int IterateDelete(LLIterator* iterator){
 		iterator->list->end = newNextElement;
 	}
 
+	ListElement* toDelete = iterator->marker;
 	iterator->marker = newNextElement;
 
-	return deleteElement(iterator->marker);
+	return deleteElement(toDelete);
 
 }
+
+int IterateInsertBefore(LLIterator* iterator, const void* data){
+	return LLFAIL;
+}
+int IterateInsertAfter(LLIterator* iterator, const void* data){
+	return LLFAIL;
+}
+int IterateSwap(LLIterator* iteratorA, LLIterator* iteratorB){
+	return LLFAIL;
+}
+
+//sortList() puts the list in increasing order based on the > operator
+//			if the data is not suitable for sorting in this way,
+//			do not use this method if your data cannot be sorted this way
+//list : a pointer to the LinkedList to sort
+//returns : a  status code as defined in linklist.h
+//			not implemented yet.  always returns LLFAIL if called
+int sortList(LinkedList* list){
+	return LLFAIL;
+}
+
+//sort list based on user supplied function
+int sortListUserFunction(LinkedList*list, LinkedListComparator compare){
+	return LLFAIL;
+}
+
