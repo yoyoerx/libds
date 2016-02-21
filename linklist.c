@@ -43,7 +43,7 @@ struct LinkedList {
 //returns : a pointer to the ith ListElement
 //			if i<=0, returns list->begining
 //			if i>number of elements, returns NULL
-ListElement* iterate(LinkedList* list, int i){
+static ListElement* iterate(const LinkedList list, int i){
 	int n;
 	ListElement* holder = NULL;
 	
@@ -61,7 +61,7 @@ ListElement* iterate(LinkedList* list, int i){
 //			assumes that data is correctly sized based on size
 //returns : a new ListElement with NULL pointers to the previous and next elements
 //			fails fatally if memory cannot be allocated
-ListElement* createElement(const void* data, size_t size){
+static ListElement* createElement(const void* data, size_t size){
 	ListElement* newElement = ec_malloc(sizeof(ListElement));
 	
 	newElement->value = ec_malloc(size);
@@ -80,7 +80,7 @@ ListElement* createElement(const void* data, size_t size){
 //size : the size of the data element to be read
 //returns : a  status code as defined in linklist.h
 //			if e==null, data is not changed and returns LLFAIL
-int readElement(const ListElement* e, void* data, size_t size){
+static int readElement(const ListElement* e, void* data, size_t size){
 	if(e==NULL) return LLFAIL;
 	bcopy(e->value, data, size);
 	return LLSUCCESS;
@@ -90,7 +90,7 @@ int readElement(const ListElement* e, void* data, size_t size){
 //toDelete : a pointer to the ListElement to delete
 //returns : a  status code as defined in linklist.h
 //			fails fatally if pointer toDelete is NULL
-int deleteElement(ListElement* toDelete){
+static int deleteElement(ListElement* toDelete){
 
 	if(toDelete==NULL) return LLFAIL;
 
@@ -111,7 +111,7 @@ int deleteElement(ListElement* toDelete){
 	return LLSUCCESS;
 }
 
-int swapElements(ListElement* elementA, ListElement* elementB){
+static int swapElements(ListElement* elementA, ListElement* elementB){
 	if(elementA==NULL||elementB==NULL) return LLFAIL;
 	ListElement* prevHolder = elementA->prevElement;
 	ListElement* nextHolder = elementA->nextElement;
@@ -129,8 +129,8 @@ int swapElements(ListElement* elementA, ListElement* elementB){
 //			this is user supplied and is assumed to be correct
 //returns : a pointer to a LinkedList with 0 elements
 //			fails fatally if it cannot allocate memory
-LinkedList* makeList(size_t size){
-	LinkedList* newList = ec_malloc(sizeof(LinkedList));
+LinkedList makeList(size_t size){
+	LinkedList newList = ec_malloc(sizeof(LinkedList));
 	newList->elementSize=size;
 	newList->begining = NULL;
 	newList->end = NULL;
@@ -140,7 +140,7 @@ LinkedList* makeList(size_t size){
 //breakList() deallocates all memory used in a LinkedList
 //list : a pointer to the LinkedList to be deallocated
 //returns : a status code as defined in linklist.h
-int breakList(LinkedList* list){
+int breakList(LinkedList list){
 	while(isEmpty(list)==LLSUCCESS){
 		deleteLastElement(list);
 	}
@@ -156,7 +156,7 @@ int breakList(LinkedList* list){
 // 			if i>number of elements, returns LLOVERRUN
 //			if i<=0, element is inserted at the begining of the list
 //returns : a  status code as defined in linklist.h
-int addElementI(LinkedList* list, const void* data, int i){
+int addElementI(LinkedList list, const void* data, int i){
 	
 	ListElement* oldIthElement = iterate(list, i);
 	if(oldIthElement==NULL) {
@@ -186,7 +186,7 @@ int addElementI(LinkedList* list, const void* data, int i){
 //data : a pointer to the data to be added
 //			assumes that data is correctly sized based on list->elementSize
 //returns : a  status code as defined in linklist.h
-int addLastElement(LinkedList* list, const void* data){
+int addLastElement(LinkedList list, const void* data){
 	ListElement* newElement = createElement(data, list->elementSize);
 
 	newElement->nextElement = NULL;
@@ -205,7 +205,7 @@ int addLastElement(LinkedList* list, const void* data){
 //data : a pointer to the data to be added
 //			assumes that data is correctly sized based on list->elementSize
 //returns : a  status code as defined in linklist.h
-int addFirstElement(LinkedList* list, const void* data){
+int addFirstElement(LinkedList list, const void* data){
 	ListElement* newElement = createElement(data, list->elementSize);
 
 	newElement->prevElement = NULL;
@@ -226,19 +226,19 @@ int addFirstElement(LinkedList* list, const void* data){
 //i : the data will be read from the ith element of the list
 //returns : a  status code as defined in linklist.h
 //			if i>number of elements, data is not changed and returns LLUNDERRUN
-int readElementI(LinkedList* list, void* data, int i){
+int readElementI(const LinkedList list, void* data, int i){
 	ListElement* toRead = iterate(list,i);
 	if(readElement(toRead, data, list->elementSize)==LLFAIL) return LLOVERRUN;
 	return LLSUCCESS;
 }
 
-int readLastElement(LinkedList* list, void* data){
+int readLastElement(const LinkedList list, void* data){
 	ListElement* toRead = list->end;
 	if(readElement(toRead, data, list->elementSize)==LLFAIL) return LLOVERRUN;
 	return LLSUCCESS;
 }
 
-int readFirstElement(LinkedList* list, void* data){
+int readFirstElement(const LinkedList list, void* data){
 	ListElement* toRead = list->begining;
 	if(readElement(toRead, data, list->elementSize)==LLFAIL) return LLUNDERRUN;
 	return LLSUCCESS;
@@ -248,7 +248,7 @@ int readFirstElement(LinkedList* list, void* data){
 //list : a pointer to the LinkedList to delete the data from
 //i : the data will be deleted from the ith element of the list
 //returns : a  status code as defined in linklist.h
-int deleteElementI(LinkedList* list, int i){
+int deleteElementI(LinkedList list, int i){
 	ListElement* toDelete = iterate(list,i);
 	if(toDelete==NULL) return LLOVERRUN;
 	if(toDelete->prevElement==NULL) list->begining = toDelete->nextElement;
@@ -260,7 +260,7 @@ int deleteElementI(LinkedList* list, int i){
 //deleteLastElement() removes the last element of the list
 //list : a pointer to the LinkedList to delete the data from
 //returns : a  status code as defined in linklist.h
-int deleteLastElement(LinkedList* list) {
+int deleteLastElement(LinkedList list) {
 	ListElement* toDelete = list->end;
 	if(toDelete == NULL) return LLOVERRUN;
 	list->end = list->end->prevElement;
@@ -273,7 +273,7 @@ int deleteLastElement(LinkedList* list) {
 //deleteFirstElement() removes the first element of the list
 //list : a pointer to the LinkedList to delete the data from
 //returns : a  status code as defined in linklist.h
-int deleteFirstElement(LinkedList* list) {
+int deleteFirstElement(LinkedList list) {
 	ListElement* toDelete = list->begining;
 	if(toDelete == NULL) return LLUNDERRUN;
 	list->begining = toDelete->nextElement;
@@ -287,7 +287,7 @@ int deleteFirstElement(LinkedList* list) {
 //list : a pointer to the LinkedList to check
 //returns : LLSUCCESS if list still has elements
 //			or LLUNDERRUN if list is empty
-int isEmpty(LinkedList* list){
+int isEmpty(const LinkedList list){
 	if(list->begining == NULL) return LLUNDERRUN;
 	else return LLSUCCESS;
 }
@@ -296,52 +296,52 @@ int isEmpty(LinkedList* list){
 //The iterator itself has a pointer to the LinkedList it serves.
 struct LLIterator {
 	ListElement* marker;
-	LinkedList* list;
+	LinkedList list;
 };
 
-LLIterator* initLLIterator(LinkedList* list){
-	LLIterator* newIterator = ec_malloc(sizeof(LLIterator));;
+LLIterator initLLIterator(const LinkedList list){
+	LLIterator newIterator = ec_malloc(sizeof(LLIterator));;
 	newIterator->marker = list->begining;
 	newIterator->list = list;
 	return newIterator;
 }
 
-int breakLLIterator(LLIterator* iterator){
+int breakLLIterator(LLIterator iterator){
 	ec_free(iterator);
 	return LLSUCCESS;
 }
 
-int IterateSetFront(LLIterator* iterator){
+int IterateSetFront(LLIterator iterator){
 	iterator->marker = iterator->list->begining;
 	if(iterator->marker==NULL) return LLUNDERRUN;
 	return LLSUCCESS;
 }
 
-int IterateSetBack(LLIterator* iterator){
+int IterateSetBack(LLIterator iterator){
 	iterator->marker = iterator->list->end;
 	if(iterator->marker==NULL) return LLUNDERRUN;
 	return LLSUCCESS;
 }
 
-int IterateForward(LLIterator* iterator){
+int IterateForward(LLIterator iterator){
 	//readElement(iterator->marker, data, iterator->list->elementSize);
 	if(iterator->marker->nextElement==NULL) return LLOVERRUN;
 	else iterator->marker = iterator->marker->nextElement;
 	return LLSUCCESS;
 }
 
-int IterateBackward(LLIterator* iterator){
+int IterateBackward(LLIterator iterator){
 	//readElement(iterator->marker, data, iterator->list->elementSize);
 	if(iterator->marker->prevElement==NULL) return LLUNDERRUN;
 	else iterator->marker = iterator->marker->prevElement;
 	return LLSUCCESS;
 }
 
-int IterateRead(LLIterator* iterator, void* data){
+int IterateRead(const LLIterator iterator, void* data){
 	return readElement(iterator->marker, data, iterator->list->elementSize);
 }
 
-int IterateDelete(LLIterator* iterator){
+int IterateDelete(LLIterator iterator){
 	if(iterator==NULL) return LLFAIL;
 	if(iterator->marker==NULL) return LLFAIL;
 
@@ -363,14 +363,32 @@ int IterateDelete(LLIterator* iterator){
 
 }
 
-int IterateInsertBefore(LLIterator* iterator, const void* data){
+int IterateInsertBefore(LLIterator iterator, const void* data){
+	ListElement* newElement = createElement(data, Iteratore->list->elementSize);
+	
 	return LLFAIL;
 }
-int IterateInsertAfter(LLIterator* iterator, const void* data){
+int IterateInsertAfter(LLIterator iterator, const void* data){
+	ListElement* newElement = createElement(data, Iteratore->list->elementSize);
+	
 	return LLFAIL;
 }
-int IterateSwap(LLIterator* iteratorA, LLIterator* iteratorB){
-	return LLFAIL;
+
+//IterateSwap() exchanges the position of two elements from the _same list_
+//the iterators continue to point to the same memory addresses, but thier
+//position in the list is changed. e.g. iteratorA points to 5 at position 3
+//& iteratorB points to 10 at position 7. after the swap, iteratorA will point
+//to 5 at position 7 and iteratorB will point to 10 at position 3.
+//iteratorA : an LLIterator to the first value to swap
+//iteratorB : an LLIterator to the second value to swap
+//returns : a status code as defined in linklist.h
+//			if iterators are not from the same list, they are not exchanged
+//			and returns LLFAIL
+//			if either iterator has a NULL element, they elements are not
+//			exchanged, and returns LLFAIL
+int IterateSwap(LLIterator iteratorA, LLIterator iteratorB){
+	if(iteratorA->list!=iteratorB->list) return LLFAIL;
+	return swapElements(iteratorA->marker, iteratorB->marker);
 }
 
 //sortList() puts the list in increasing order based on the > operator
@@ -379,12 +397,12 @@ int IterateSwap(LLIterator* iteratorA, LLIterator* iteratorB){
 //list : a pointer to the LinkedList to sort
 //returns : a  status code as defined in linklist.h
 //			not implemented yet.  always returns LLFAIL if called
-int sortList(LinkedList* list){
+int sortList(LinkedList list){
 	return LLFAIL;
 }
 
 //sort list based on user supplied function
-int sortListUserFunction(LinkedList*list, LinkedListComparator compare){
+int sortListUserFunction(LinkedList list, LinkedListComparator compare){
 	return LLFAIL;
 }
 
