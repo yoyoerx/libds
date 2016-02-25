@@ -1,5 +1,6 @@
-#include<stdlib.h>
-#include<string.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 #include "linklist.h"
 #include "utils.h"
 
@@ -111,6 +112,9 @@ static int deleteElement(ListElement* toDelete){
 	return LLSUCCESS;
 }
 
+
+//who ever calls swapElements needs to check for and clean up the list
+//begining and end pointers. otherwise, segfaults, lost data, and memoryleaks...
 static int swapElements(ListElement* elementA, ListElement* elementB){
 	if(elementA==NULL||elementB==NULL) return LLFAIL;
 	ListElement* prevHolder = elementA->prevElement;
@@ -119,6 +123,17 @@ static int swapElements(ListElement* elementA, ListElement* elementB){
 	elementA->nextElement = elementB->nextElement;
 	elementB->prevElement = prevHolder;
 	elementB->nextElement = nextHolder;
+
+	//set the prevElement's next for both A and B
+	if(elementA->prevElement!=NULL) elementA->prevElement->nextElement = elementA;
+	if(elementB->prevElement!=NULL) elementB->prevElement->nextElement = elementB;
+
+	//set the nextElement's prev for both A and B
+	if(elementA->nextElement!=NULL) elementA->nextElement->prevElement = elementA;
+	if(elementA->prevElement!=NULL) elementB->nextElement->prevElement = elementB;
+
+
+
 	return LLSUCCESS;
 }
 
@@ -308,6 +323,7 @@ LLIterator initLLIterator(const LinkedList list){
 
 int breakLLIterator(LLIterator iterator){
 	ec_free(iterator);
+	iterator = NULL;
 	return LLSUCCESS;
 }
 
@@ -324,27 +340,25 @@ int IterateSetBack(LLIterator iterator){
 }
 
 int IterateForward(LLIterator iterator){
-	//readElement(iterator->marker, data, iterator->list->elementSize);
 	if(iterator->marker->nextElement==NULL) return LLOVERRUN;
 	else iterator->marker = iterator->marker->nextElement;
 	return LLSUCCESS;
 }
 
 int IterateBackward(LLIterator iterator){
-	//readElement(iterator->marker, data, iterator->list->elementSize);
 	if(iterator->marker->prevElement==NULL) return LLUNDERRUN;
 	else iterator->marker = iterator->marker->prevElement;
 	return LLSUCCESS;
 }
 
 int IterateRead(const LLIterator iterator, void* data){
+	if(iterator->marker==NULL) return LLUNDERRUN;
 	return readElement(iterator->marker, data, iterator->list->elementSize);
 }
 
 int IterateDelete(LLIterator iterator){
 	if(iterator==NULL) return LLFAIL;
 	if(iterator->marker==NULL) return LLFAIL;
-
 
 	ListElement* newNextElement= iterator->marker->nextElement;
 
@@ -364,14 +378,28 @@ int IterateDelete(LLIterator iterator){
 }
 
 int IterateInsertBefore(LLIterator iterator, const void* data){
-	ListElement* newElement = createElement(data, Iteratore->list->elementSize);
-	
-	return LLFAIL;
+	ListElement* newElement = createElement(data, iterator->list->elementSize);
+	newElement->prevElement = iterator->marker->prevElement;
+	iterator->marker->prevElement = newElement;
+	newElement->nextElement = iterator->marker;
+	if(newElement->prevElement!=NULL) 
+		newElement->prevElement->nextElement = newElement;
+	else
+		iterator->list->begining = newElement;
+
+	return LLSUCCESS;
 }
 int IterateInsertAfter(LLIterator iterator, const void* data){
-	ListElement* newElement = createElement(data, Iteratore->list->elementSize);
-	
-	return LLFAIL;
+	ListElement* newElement = createElement(data, iterator->list->elementSize);
+	newElement->nextElement = iterator->marker->nextElement;
+	iterator->marker->nextElement = newElement;
+	newElement->prevElement = iterator->marker;
+	if(newElement->nextElement!=NULL) 
+		newElement->nextElement->prevElement = newElement;
+	else
+		iterator->list->end = newElement;
+
+	return LLSUCCESS;
 }
 
 //IterateSwap() exchanges the position of two elements from the _same list_
@@ -387,8 +415,25 @@ int IterateInsertAfter(LLIterator iterator, const void* data){
 //			if either iterator has a NULL element, they elements are not
 //			exchanged, and returns LLFAIL
 int IterateSwap(LLIterator iteratorA, LLIterator iteratorB){
+
 	if(iteratorA->list!=iteratorB->list) return LLFAIL;
-	return swapElements(iteratorA->marker, iteratorB->marker);
+	int retval = swapElements(iteratorA->marker, iteratorB->marker);
+
+	//if the elements we are swaping are at the begining or end of the list,
+	//then we need to adjust the pointers in the list appropriatly
+	if(retval==LLSUCCESS){
+		if(iteratorA->list->begining == iteratorA->marker){
+			iteratorA->list->begining = iteratorB->marker;
+		} else if(iteratorA->list->begining == iteratorB->marker){
+			iteratorA->list->begining = iteratorA->marker;
+		}
+		if(iteratorA->list->end == iteratorA->marker){
+			iteratorA->list->end = iteratorB->marker;
+		} else if(iteratorA->list->end == iteratorB->marker){
+			iteratorA->list->end = iteratorA->marker;
+		}
+	}
+	return retval;
 }
 
 //sortList() puts the list in increasing order based on the > operator
@@ -406,3 +451,41 @@ int sortListUserFunction(LinkedList list, LinkedListComparator compare){
 	return LLFAIL;
 }
 
+/*
+//debugging functions
+void printListElement(ListElement* element){
+	printf("Printing ListElement 0x%08X:\n", element);
+	printf("{      value = 0x%08X}\n", element->value);
+	printf("{prevElement = 0x%08X}\n", element->prevElement);
+	printf("{nextElement = 0x%08X}\n", element->nextElement);
+}
+
+
+void printLinkedList(LinkedList list, uint8_t printelement){
+	printf("Printing LinkedList 0x%08X:\n", list);
+	printf("{   begining = 0x%08X}\n", list->begining);
+	printf("{        end = 0x%08X}\n", list->end);
+	printf("{elementSize = 0x%08d}\n", list->elementSize);
+	if(printelement){
+		printf("ListElement at begining:\n");
+		printListElement(list->begining);
+		printf("ListElement at end:\n");
+		printListElement(list->end);
+	}
+
+}
+
+void printLLIterator(LLIterator iterator, uint8_t printmarker, uint8_t printlist, uint8_t printelement){
+	printf("Printing LLIterator 0x%08X:\n", iterator);
+	printf("{     marker = 0x%08X}\n", iterator->marker);
+	printf("{       list = 0x%08X}\n", iterator->list);
+	if(printmarker){
+		printf("ListElement at marker:\n");
+		printListElement(iterator->marker);
+	}
+	if(printlist){
+		printf("LinkedList at list:\n");
+		printLinkedList(iterator->list, printelement);	
+	}	
+}
+*/

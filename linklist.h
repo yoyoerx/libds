@@ -48,4 +48,9 @@ int sortList(const LinkedList list);
 typedef int (*LinkedListComparator)(const void* element1, const void* element2);
 int sortListUserFunction(LinkedList list, LinkedListComparator compare);
 
+//debugging only
+
+//void printLinkedList(LinkedList list, uint8_t printelement);
+//void printLLIterator(LLIterator iterator, uint8_t printmarker, uint8_t printlist, uint8_t printelement);
+
 #endif
